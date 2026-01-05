@@ -3,7 +3,7 @@ import random
 import concurrent.futures
 import time
 
-API_URL = "http://localhost:5000/proxies?protocol"
+API_URL = "http://localhost:5000/proxies"
 TEST_URL = "https://facebook.com"
 TIMEOUT = 30
 
@@ -22,7 +22,7 @@ def check_proxy(proxy_info):
     protocol = proxy_info.get('protocol', 'http')
     ip = proxy_info.get('ip')
     port = proxy_info.get('port')
-    
+
     if not ip or not port:
         return False, "Invalid proxy data"
 
@@ -32,7 +32,7 @@ def check_proxy(proxy_info):
         scheme = "socks4"
     elif "socks5" in protocol:
         scheme = "socks5"
-    
+
     # Construct proxy URL with correct scheme
     proxy_url = f"{scheme}://{ip}:{port}"
     proxies = {
@@ -70,7 +70,7 @@ def main():
 
     # Filter out proxies from China
     all_proxies = [
-        p for p in all_proxies 
+        p for p in all_proxies
         if p.get('country_code') != 'CN' and p.get('in_chinese_mainland') is not True
     ]
     print(f"Proxies after removing China: {len(all_proxies)}")
@@ -84,24 +84,24 @@ def main():
     valid_proxies = [p for p in all_proxies if p.get('delay') is not None]
     # If delay is missing, treat as high delay
     others = [p for p in all_proxies if p.get('delay') is None]
-    
+
     valid_proxies.sort(key=lambda x: x['delay'])
     sorted_proxies = valid_proxies + others
-    
+
     num_to_test = min(100, len(sorted_proxies))
     selected_proxies = sorted_proxies[:num_to_test]
     print(f"Selected top {num_to_test} proxies with lowest delay for testing against {TEST_URL}...")
 
     success_count = 0
-    
+
     # Use threads to speed up checking
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         future_to_proxy = {executor.submit(check_proxy, p): p for p in selected_proxies}
-        
+
         for i, future in enumerate(concurrent.futures.as_completed(future_to_proxy)):
             proxy_info = future_to_proxy[future]
             proxy_str = f"{proxy_info.get('ip')}:{proxy_info.get('port')}"
-            
+
             try:
                 is_success, msg = future.result()
                 status = "✅" if is_success else "❌"

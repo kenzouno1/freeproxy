@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libssl-dev \
         && rm -rf /var/lib/apt/lists/*
 
+# Ensure Python output is not buffered (for Docker logs)
+ENV PYTHONUNBUFFERED=1
+
 # Set workdir
 WORKDIR /app
 
@@ -19,11 +22,6 @@ COPY requirements.txt .
 
 # Install Python dependencies (including Flask)
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright browsers and dependencies
-# We set the PLAYWRIGHT_BROWSERS_PATH environment variable so browsers are installed
-# in a predictable location that we can persist or cache.
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Expose the Flask port
 EXPOSE 5000

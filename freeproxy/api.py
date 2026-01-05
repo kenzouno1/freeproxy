@@ -25,7 +25,11 @@ client = ProxiedSessionClient(
     proxy_sources=None,                     # use all registered sources
     init_proxied_session_cfg={
         "max_pages": 2,                    # crawl a couple of pages per source
-        "filter_rule": None,               # no filter at crawl time
+        "filter_rule": {
+            # Exclude countries that block Facebook
+            # CN=China, IR=Iran, KP=North Korea, SY=Syria, TM=Turkmenistan, RU=Russia
+            "exclude_country_codes": ["CN", "IR", "KP", "SY", "TM", "RU"]
+        },
     },
 )
 
@@ -42,17 +46,21 @@ def refresh_proxies_task():
         # For simplicity and robustness given the current class design, let's just
         # iterate over existing sessions and call refreshproxies() if available,
         # or better yet, re-run the logic that populates self.proxied_sessions.
-        
+
         # Actually, the cleanest way with the current class is to just create a NEW client instance
         # temporarily to do the crawling, then update the Redis cache.
         # The API reads from Redis, so it doesn't matter if the 'client' object in memory
         # has the latest proxies, as long as Redis does.
-        
+
         temp_client = ProxiedSessionClient(
             proxy_sources=None,
             init_proxied_session_cfg={
                 "max_pages": 2,
-                "filter_rule": None,
+                "filter_rule": {
+                    # Exclude countries that block Facebook
+                    # CN=China, IR=Iran, KP=North Korea, SY=Syria, TM=Turkmenistan, RU=Russia
+                    "exclude_country_codes": ["CN", "IR", "KP", "SY", "TM", "RU"]
+                },
             },
         )
         temp_client.save_to_file()
@@ -79,12 +87,12 @@ atexit.register(lambda: scheduler.shutdown())
 
 def _apply_query_filters(proxies, args):
     """Filter a list of ProxyInfo dicts according to request args.
-    
+
     Supports comma-separated values for 'type', 'country_code', 'protocol', and 'anonymity'.
     Example: ?protocol=http,https&country_code=US,CN
     """
     result = proxies
-    
+
     # Helper to parse comma-separated list
     def get_list(key):
         val = args.get(key)
@@ -145,6 +153,9 @@ def get_proxies():
     flat = []
     for src, lst in data.items():
         for p in lst:
+            # Skip proxies from countries that block Facebook
+            if p.get("country_code", "").upper() in ["CN", "IR", "KP", "SY", "TM", "RU"]:
+                continue
             p["source"] = src
             flat.append(p)
 

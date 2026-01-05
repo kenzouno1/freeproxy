@@ -98,7 +98,7 @@ class ProxiedSessionClient:
                     disable_print=disable_print,
                 )
                 continue
-            self.logger_handle.info(f'{self.__class__.__name__}.__init__ >>> initializing {source} done, fetched {len(candidate_proxies)} proxies.', disable_print=disable_print)
+            self.logger_handle.info(f'{self.__class__.__name__}.__init__ >>> initializing {source} done, fetched {len(candidates)} proxies.', disable_print=disable_print)
         # set attributes
         self.max_tries = max_tries
         self.disable_print = disable_print

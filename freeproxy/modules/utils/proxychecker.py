@@ -85,6 +85,7 @@ def applyfilterrule():
             anonymity = __tolist__(rule.get('anonymity'))
             protocol = __tolist__(rule.get('protocol'))
             country_code = __tolist__(rule.get('country_code'))
+            exclude_country_codes = __tolist__(rule.get('exclude_country_codes'))
             max_tcp_ms, max_tcp_ms_flag = rule.get('max_tcp_ms'), False
             if (max_tcp_ms is not None) and isinstance(max_tcp_ms, (int, float)):
                 with ThreadPoolExecutor(max_workers=20) as executor:
@@ -110,6 +111,8 @@ def applyfilterrule():
                 if anonymity and (p.anonymity.lower() not in anonymity): continue
                 if protocol and (p.protocol.lower() not in protocol): continue
                 if country_code and (p.country_code.lower() not in country_code): continue
+                # Exclude specific country codes (e.g., CN for China)
+                if exclude_country_codes and (p.country_code.lower() in exclude_country_codes): continue
                 if max_tcp_ms_flag and p.tcp_connect_delay > max_tcp_ms: continue
                 if max_http_ms_flag and p.http_connect_delay > max_http_ms: continue
                 filtered.append(p)

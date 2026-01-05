@@ -42,10 +42,12 @@ def fetchjsonendpoint1(ep):
     for row in rows:
         ip = row.get("ip")
         port = row.get("port")
-        if not ip or not port:
+        country = row.get("country", "")
+        # Skip Chinese proxies (CN or China)
+        if not ip or not port or country.upper() in ["CN", "CHINA"]:
             continue
         proxies.append({
-            "ip": ip, "port": port, "protocol": row.get("protocol"), "country": row.get("country"), "anonymity": row.get("anonymity"), "speed": row.get("speed"),
+            "ip": ip, "port": port, "protocol": row.get("protocol"), "country": country, "anonymity": row.get("anonymity"), "speed": row.get("speed"),
         })
     print(f"[JSON1] proxies fetched: {len(proxies)}")
     return proxies
@@ -67,10 +69,12 @@ def fetchjsonendpoint2(ep):
     for row in rows:
         ip = row.get("ip")
         port = row.get("port")
-        if not ip or not port:
+        country = row.get("geolocation", {}).get("country", "")
+        # Skip Chinese proxies (CN or China)
+        if not ip or not port or str(country).upper() in ["CN", "CHINA"]:
             continue
         proxies.append({
-            "ip": ip, "port": port, "protocol": row.get("protocol"), "country": row.get("geolocation", {}).get("country"), "anonymity": row.get("anonymity"), "speed": row.get("speed", 100),
+            "ip": ip, "port": port, "protocol": row.get("protocol"), "country": country, "anonymity": row.get("anonymity"), "speed": row.get("speed", 100),
         })
     print(f"[JSON2] proxies fetched: {len(proxies)}")
     return proxies
